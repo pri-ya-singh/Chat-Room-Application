@@ -124,12 +124,6 @@ The `Room` class:
 - **TCP/IP Socket Programming**
 - **Multi-threading**
 - **Object-Oriented Design**
-
----
-
-## 🖥️ How to Build
-
-### Compile (MinGW example)
-
 ```bash
 g++ chatRoom.cpp -std=gnu++17 -I"path_to_boost" -lboost_system -pthread -o chatApp
+
