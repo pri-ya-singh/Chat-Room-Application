@@ -1,12 +1,13 @@
 #include "message.hpp"
 #include <iostream>
-// #include <thread.hpp>
 #include <boost/asio.hpp>
 #include <thread>
 
 using boost::asio::ip::tcp;
 
-// ================= ASYNC READ FUNCTION =================
+std::string username;
+
+// ================= READ =================
 void async_read(tcp::socket &socket) {
 
     auto buffer = std::make_shared<boost::asio::streambuf>();
@@ -19,61 +20,53 @@ void async_read(tcp::socket &socket) {
                 std::string received;
                 std::getline(is, received);
 
-                std::cout << "Server: " << received << std::endl;
+                std::cout << received << std::endl;
 
-                async_read(socket);  // Continue reading
-            } 
-            else {
-                std::cout << "Disconnected from server: "
-                          << ec.message() << std::endl;
+                async_read(socket);
             }
-        }
-    );
+        });
 }
 
 // ================= MAIN =================
 int main(int argc, char* argv[]) {
 
-    try {
+    std::cout << "Enter your name: ";
+    std::getline(std::cin, username);
 
-        if(argc < 2){
-            std::cerr << "Usage: client <port>" << std::endl;
-            return 1;
-        }
+    try {
 
         boost::asio::io_context io_context;
         tcp::socket socket(io_context);
         tcp::resolver resolver(io_context);
 
-        // Connect to server
         boost::asio::connect(socket,
             resolver.resolve("127.0.0.1", argv[1]));
 
-        std::cout << "Connected to server!" << std::endl;
+        std::cout << "Connected to chat!\n";
 
-        // Start async reading
         async_read(socket);
 
-        // Thread for sending messages
         std::thread t([&]() {
 
             while (true) {
 
-                std::string data;
-                std::cout << "Enter message: ";
-                std::getline(std::cin, data);
+                std::string msg;
+                std::getline(std::cin, msg);
 
-                if(data == "exit") {
+                if(msg == "exit") {
                     socket.close();
                     break;
                 }
 
-                data += "\n";
+                std::string fullMsg = username + ": " + msg + "\n";
+                std::cout << std::endl;              // move to new line
+                std::cout << "You: " << msg << std::endl;
+                std::cout << std::flush;
 
                 boost::asio::post(io_context,
-                    [&, data]() {
+                    [&, fullMsg]() {
                         boost::asio::write(socket,
-                            boost::asio::buffer(data));
+                            boost::asio::buffer(fullMsg));
                     });
             }
         });
@@ -83,8 +76,7 @@ int main(int argc, char* argv[]) {
     }
 
     catch (std::exception& e) {
-        std::cerr << "Exception: "
-                  << e.what() << std::endl;
+        std::cout << e.what();
     }
 
     return 0;
