@@ -6,7 +6,7 @@
 void Room::join(ParticipantPointer participant){
     this->participants.insert(participant);
 }
-
+ 
 // Remove a participant from the room
 void Room::leave(ParticipantPointer participant){
     this->participants.erase(participant);
